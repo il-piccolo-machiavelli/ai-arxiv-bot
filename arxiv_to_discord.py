@@ -24,20 +24,25 @@ KEYWORDS_3D = [
 WEBHOOK_2D = os.environ["WEBHOOK_2D"]
 WEBHOOK_3D = os.environ["WEBHOOK_3D"]
 
-# 주말과 평일을 고려한 날짜 기준 설정
-today_weekday = datetime.utcnow().weekday()
-if today_weekday == 0:  # 월요일
-    days_ago = 3  # 금요일 논문까지 포함
-elif today_weekday == 1:  # 화요일
-    days_ago = 4  # 금요일 논문까지 포함
-else:
-    days_ago = 1  # 어제 논문만
+# 날짜 범위 설정
+today = datetime.utcnow()
+today_weekday = today.weekday()  # 0:월, 1:화, 2:수, 3:목, 4:금, 5:토, 6:일
 
-date_threshold = datetime.utcnow() - timedelta(days=days_ago)
+if today_weekday in [5, 6, 0]:  # 토, 일, 월요일
+    # 지난 금요일 찾기
+    days_since_friday = (today_weekday + 2) % 7  # 토:0, 일:1, 월:2
+    target_date = today - timedelta(days=days_since_friday)
+else:  # 화, 수, 목, 금요일
+    # 어제 찾기
+    target_date = today - timedelta(days=1)
+
+# 타겟 날짜의 00:00:00 ~ 23:59:59 설정
+start_date = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+end_date = target_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
 feed = feedparser.parse(ARXIV_URL)
 
 def send_to_discord(webhook_url, content):
-    requests.post(webhook_url, json={"content": content})
     response = requests.post(webhook_url, json={"content": content})
     print(f"📤 Discord 전송 응답: {response.status_code}")
     if response.status_code != 204:
@@ -56,9 +61,10 @@ def filter_and_post():
     print(f"✅ arXiv에서 받은 논문 수: {len(feed.entries)}개")
     
     # 날짜 비교 정보 출력
-    print(f"\n🗓️ 기준 날짜 (UTC): {date_threshold}")
-    print(f"🕒 현재 시간 (UTC): {datetime.utcnow()}")
-    print(f"📅 요일 기준: {['월', '화', '수', '목', '금', '토', '일'][today_weekday]}요일, {days_ago}일 전 논문까지 포함")
+    weekday_names = ['월', '화', '수', '목', '금', '토', '일']
+    print(f"\n🗓️ 오늘: {today.strftime('%Y-%m-%d')} ({weekday_names[today_weekday]})")
+    print(f"📅 타겟 날짜: {target_date.strftime('%Y-%m-%d')} ({weekday_names[target_date.weekday()]})")
+    print(f"⏰ 수집 범위: {start_date.strftime('%Y-%m-%d %H:%M')} ~ {end_date.strftime('%Y-%m-%d %H:%M')}")
     
     print("\n📄 수집된 논문 제목 및 날짜 목록:")
     
@@ -69,34 +75,36 @@ def filter_and_post():
         # 날짜 정보 출력
         print(f" {i+1}. [{updated.strftime('%Y-%m-%d %H:%M')}] {title}")
         
-        if updated < date_threshold:
-            print(f"   ⏭️ SKIP: 날짜가 기준보다 이전임 ({updated} < {date_threshold})")
-            continue
+        # 타겟 날짜 범위에 포함되는지 확인
+        if start_date <= updated <= end_date:
+            print(f"   ✅ PASS: 타겟 날짜 범위 내 ({start_date} <= {updated} <= {end_date})")
+            
+            text = (entry.title + " " + entry.summary).lower()
+            
+            # 키워드 매칭 디버깅
+            if contains_keyword(text, KEYWORDS_2D):
+                print(f"   👉 [2D 매칭됨] {entry.title.strip()}")
+                msg_2d.append(f"🔹 **{entry.title.strip()}**\n{entry.link}")
+            
+            if contains_keyword(text, KEYWORDS_3D):
+                print(f"   👉 [3D 매칭됨] {entry.title.strip()}")
+                msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
         else:
-            print(f"   ✅ PASS: 날짜 조건 통과 ({updated} >= {date_threshold})")
-
-        text = (entry.title + " " + entry.summary).lower()
-        
-        # 키워드 매칭 디버깅
-        if contains_keyword(text, KEYWORDS_2D):
-            print(f"   👉 [2D 매칭됨] {entry.title.strip()}")
-            msg_2d.append(f"🔹 **{entry.title.strip()}**\n{entry.link}")
-        
-        if contains_keyword(text, KEYWORDS_3D):
-            print(f"   👉 [3D 매칭됨] {entry.title.strip()}")
-            msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
+            print(f"   ⏭️ SKIP: 타겟 날짜 범위 밖 (not in {start_date} ~ {end_date})")
 
     print(f"\n📊 필터링 결과:")
     print(f"- 2D 논문: {len(msg_2d)}개")
     print(f"- 3D 논문: {len(msg_3d)}개")
 
+    target_date_str = target_date.strftime('%Y-%m-%d')
+    
     if msg_2d:
-        send_to_discord(WEBHOOK_2D, "**📡 오늘의 2D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_2d[:5]))
+        send_to_discord(WEBHOOK_2D, f"**📡 {target_date_str} 2D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_2d[:5]))
     else:
         print("❌ 2D 논문이 없어 Discord 전송을 생략합니다.")
     
     if msg_3d:
-        send_to_discord(WEBHOOK_3D, "**🧱 오늘의 3D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_3d[:5]))
+        send_to_discord(WEBHOOK_3D, f"**🧱 {target_date_str} 3D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_3d[:5]))
     else:
         print("❌ 3D 논문이 없어 Discord 전송을 생략합니다.")
 
