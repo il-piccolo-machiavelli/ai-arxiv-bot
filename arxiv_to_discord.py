@@ -43,6 +43,8 @@ def filter_and_post():
         print(f"🔍 제목: {entry.title.strip()}")
         print(f"요약 앞부분: {entry.summary[:80]}...")
         text = (entry.title + " " + entry.summary).lower()
+        if "diffusion" in text:
+            print(f"🔥 'diffusion' 키워드 직접 발견됨 in: {entry.title.strip()}")
         url = entry.link
 
         if any(kw in text for kw in KEYWORDS_2D):
