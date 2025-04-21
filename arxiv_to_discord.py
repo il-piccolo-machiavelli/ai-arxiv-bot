@@ -35,6 +35,8 @@ def filter_and_post():
     msg_2d, msg_3d = [], []
     print(f"✅ arXiv에서 받은 논문 수: {len(feed.entries)}개")
     for entry in feed.entries:
+        title = entry.title.strip()
+        print(f" - {title}")
         updated = datetime.strptime(entry.updated, "%Y-%m-%dT%H:%M:%SZ")
         if updated < yesterday:
             continue
