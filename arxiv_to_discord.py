@@ -2,6 +2,7 @@ import feedparser
 import requests
 import os
 from datetime import datetime, timedelta
+import sys
 
 ARXIV_URL = (
     "http://export.arxiv.org/api/query?search_query="
@@ -24,16 +25,17 @@ KEYWORDS_3D = [
 WEBHOOK_2D = os.environ["WEBHOOK_2D"]
 WEBHOOK_3D = os.environ["WEBHOOK_3D"]
 
-# 날짜 범위 설정
+# 주말 체크 및 종료
 today = datetime.utcnow()
 today_weekday = today.weekday()  # 0:월, 1:화, 2:수, 3:목, 4:금, 5:토, 6:일
 
+if today_weekday in [5, 6]:  # 토요일 또는 일요일
+    print(f"🚫 주말({['월', '화', '수', '목', '금', '토', '일'][today_weekday]}요일)은 실행하지 않습니다.")
+    sys.exit(0)
+
+# 날짜 범위 설정
 if today_weekday == 0:  # 월요일
     target_date = today - timedelta(days=3)  # 금요일
-elif today_weekday == 6:  # 일요일
-    target_date = today - timedelta(days=2)  # 금요일
-elif today_weekday == 5:  # 토요일
-    target_date = today - timedelta(days=1)  # 금요일
 else:  # 화, 수, 목, 금요일
     target_date = today - timedelta(days=1)  # 어제
 
