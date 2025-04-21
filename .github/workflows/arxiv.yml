@@ -2,7 +2,10 @@ name: Daily ArXiv to Discord
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 한국시간 오전 7시
+    # 한국시간 평일 오전 7시 = UTC 전날 22시
+    # cron은 UTC 기준이므로 월-금 22시에 실행하면 
+    # 한국시간으로 화-토 오전 7시에 실행됨
+    - cron: '0 22 * * 1-5'  # 월-금 22시 UTC (화-토 7시 KST)
   workflow_dispatch:
 
 jobs:
