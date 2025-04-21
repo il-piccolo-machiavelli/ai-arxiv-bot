@@ -29,6 +29,10 @@ feed = feedparser.parse(ARXIV_URL)
 
 def send_to_discord(webhook_url, content):
     requests.post(webhook_url, json={"content": content})
+    response = requests.post(webhook_url, json={"content": content})
+    print(f"📤 Discord 전송 응답: {response.status_code}")
+    if response.status_code != 204:
+        print(f"❗ 응답 본문: {response.text}")
 
 def contains_keyword(text, keywords):
     clean_text = text.replace("-", "").replace("\n", "").replace(" ", "")
