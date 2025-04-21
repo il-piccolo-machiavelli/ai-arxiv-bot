@@ -45,23 +45,38 @@ def filter_and_post():
     msg_2d, msg_3d = [], []
 
     print(f"✅ arXiv에서 받은 논문 수: {len(feed.entries)}개")
-    print("📄 수집된 논문 제목 목록:")
-    for entry in feed.entries:
-        title = entry.title.strip()
-        print(f" - {title}")
+    print(f"\n🗓️ 어제 날짜 (UTC): {yesterday}")
+    print(f"🕒 현재 시간 (UTC): {datetime.utcnow()}")
 
-    for entry in feed.entries:
+    print("\n📄 수집된 논문 제목 및 날짜 목록:")
+    
+    for i, entry in enumerate(feed.entries):
+        title = entry.title.strip()
         updated = datetime.strptime(entry.updated, "%Y-%m-%dT%H:%M:%SZ")
+        
+        # 날짜 정보 출력
+        print(f" {i+1}. [{updated.strftime('%Y-%m-%d %H:%M')}] {title}")
+        
         if updated < yesterday:
+            print(f"   ⏭️ SKIP: 날짜가 어제보다 이전임 ({updated} < {yesterday})")
             continue
+        else:
+            print(f"   ✅ PASS: 날짜 조건 통과 ({updated} >= {yesterday})")
 
         text = (entry.title + " " + entry.summary).lower()
+        
+        # 키워드 매칭 디버깅
         if contains_keyword(text, KEYWORDS_2D):
-            print(f"👉 [2D 매칭됨] {entry.title.strip()}")
+            print(f"   👉 [2D 매칭됨] {entry.title.strip()}")
             msg_2d.append(f"🔹 **{entry.title.strip()}**\n{entry.link}")
+        
         if contains_keyword(text, KEYWORDS_3D):
-            print(f"👉 [3D 매칭됨] {entry.title.strip()}")
+            print(f"   👉 [3D 매칭됨] {entry.title.strip()}")
             msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
+
+    print(f"\n📊 필터링 결과:")
+    print(f"- 2D 논문: {len(msg_2d)}개")
+    print(f"- 3D 논문: {len(msg_3d)}개")
 
     if msg_2d:
         send_to_discord(WEBHOOK_2D, "**📡 오늘의 2D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_2d[:5]))
