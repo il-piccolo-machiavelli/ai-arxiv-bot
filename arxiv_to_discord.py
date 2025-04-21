@@ -28,13 +28,14 @@ WEBHOOK_3D = os.environ["WEBHOOK_3D"]
 today = datetime.utcnow()
 today_weekday = today.weekday()  # 0:월, 1:화, 2:수, 3:목, 4:금, 5:토, 6:일
 
-if today_weekday in [5, 6, 0]:  # 토, 일, 월요일
-    # 지난 금요일 찾기
-    days_since_friday = (today_weekday + 2) % 7  # 토:0, 일:1, 월:2
-    target_date = today - timedelta(days=days_since_friday)
+if today_weekday == 0:  # 월요일
+    target_date = today - timedelta(days=3)  # 금요일
+elif today_weekday == 6:  # 일요일
+    target_date = today - timedelta(days=2)  # 금요일
+elif today_weekday == 5:  # 토요일
+    target_date = today - timedelta(days=1)  # 금요일
 else:  # 화, 수, 목, 금요일
-    # 어제 찾기
-    target_date = today - timedelta(days=1)
+    target_date = today - timedelta(days=1)  # 어제
 
 # 타겟 날짜의 00:00:00 ~ 23:59:59 설정
 start_date = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
