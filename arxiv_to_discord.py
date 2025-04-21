@@ -3,11 +3,10 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-# 카테고리 설정
 ARXIV_URL = (
     "http://export.arxiv.org/api/query?search_query="
-    "(cat:cs.CV+OR+cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.GR+OR+cat:cs.CL+OR+cat:stat.ML+OR+cat:eess.IV)"
-    "&sortBy=submittedDate&max_results=30"
+    "(cat:cs.CV+OR+cat:cs.GR+OR+cat:eess.IV)"
+    "&sortBy=submittedDate&max_results=60"
 )
 
 KEYWORDS_2D = [
@@ -31,28 +30,31 @@ feed = feedparser.parse(ARXIV_URL)
 def send_to_discord(webhook_url, content):
     requests.post(webhook_url, json={"content": content})
 
+def contains_keyword(text, keywords):
+    clean_text = text.replace("-", "").replace("\n", "").replace(" ", "")
+    return any(kw.replace(" ", "") in clean_text for kw in keywords)
+
 def filter_and_post():
     msg_2d, msg_3d = [], []
+
     print(f"✅ arXiv에서 받은 논문 수: {len(feed.entries)}개")
+    print("📄 수집된 논문 제목 목록:")
     for entry in feed.entries:
         title = entry.title.strip()
         print(f" - {title}")
+
+    for entry in feed.entries:
         updated = datetime.strptime(entry.updated, "%Y-%m-%dT%H:%M:%SZ")
         if updated < yesterday:
             continue
-        print(f"🔍 제목: {entry.title.strip()}")
-        print(f"요약 앞부분: {entry.summary[:80]}...")
-        text = (entry.title + " " + entry.summary).lower()
-        if "diffusion" in text:
-            print(f"🔥 'diffusion' 키워드 직접 발견됨 in: {entry.title.strip()}")
-        url = entry.link
 
-        if any(kw in text for kw in KEYWORDS_2D):
-            print("👉 [2D 키워드 매칭됨]")
-            msg_2d.append(f"🔹 **{entry.title.strip()}**\n{url}")
-        if any(kw in text for kw in KEYWORDS_3D):
-            print("👉 [3D 키워드 매칭됨]")
-            msg_3d.append(f"🔸 **{entry.title.strip()}**\n{url}")
+        text = (entry.title + " " + entry.summary).lower()
+        if contains_keyword(text, KEYWORDS_2D):
+            print(f"👉 [2D 매칭됨] {entry.title.strip()}")
+            msg_2d.append(f"🔹 **{entry.title.strip()}**\n{entry.link}")
+        if contains_keyword(text, KEYWORDS_3D):
+            print(f"👉 [3D 매칭됨] {entry.title.strip()}")
+            msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
 
     if msg_2d:
         send_to_discord(WEBHOOK_2D, "**📡 오늘의 2D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_2d[:5]))
