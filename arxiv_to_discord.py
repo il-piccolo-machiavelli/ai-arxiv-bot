@@ -33,16 +33,21 @@ def send_to_discord(webhook_url, content):
 
 def filter_and_post():
     msg_2d, msg_3d = [], []
+    print(f"✅ arXiv에서 받은 논문 수: {len(feed.entries)}개")
     for entry in feed.entries:
         updated = datetime.strptime(entry.updated, "%Y-%m-%dT%H:%M:%SZ")
         if updated < yesterday:
             continue
+        print(f"🔍 제목: {entry.title.strip()}")
+        print(f"요약 앞부분: {entry.summary[:80]}...")
         text = (entry.title + " " + entry.summary).lower()
         url = entry.link
 
         if any(kw in text for kw in KEYWORDS_2D):
+            print("👉 [2D 키워드 매칭됨]")
             msg_2d.append(f"🔹 **{entry.title.strip()}**\n{url}")
         if any(kw in text for kw in KEYWORDS_3D):
+            print("👉 [3D 키워드 매칭됨]")
             msg_3d.append(f"🔸 **{entry.title.strip()}**\n{url}")
 
     if msg_2d:
