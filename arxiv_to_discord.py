@@ -34,6 +34,9 @@ def contains_keyword(text, keywords):
     clean_text = text.replace("-", "").replace("\n", "").replace(" ", "")
     return any(kw.replace(" ", "") in clean_text for kw in keywords)
 
+print(f"🧪 Webhook 2D 존재 여부: {'WEBHOOK_2D' in os.environ}")
+print(f"📡 Webhook 2D 길이: {len(os.environ.get('WEBHOOK_2D', ''))}")
+
 def filter_and_post():
     msg_2d, msg_3d = [], []
 
