@@ -12,14 +12,16 @@ ARXIV_URL = (
 
 KEYWORDS_2D = [
     "text-to-image", "image-to-image", "diffusion", "latent diffusion",
-    "gan", "vae", "autoregressive", "normalizing flow", "energy-based"
+    "gan", "vae", "autoregressive", "normalizing flow", "energy-based",
+    "text-to-image diffusion", "image restoration", "depth-to-image"
 ]
 
 KEYWORDS_3D = [
     "text-to-3d", "image-to-3d", "3d reconstruction", "point cloud", "mesh",
     "polygon mesh", "solid", "solid modeling", "nerf", "3dgs", "sdf", "stylesdf",
     "deepcad", "3d-gpt", "csg", "csgnet", "occupancy network",
-    "latent point diffusion model", "meshgpt", "point-e", "get3d", "atlasnet", "cad agent"
+    "latent point diffusion model", "meshgpt", "point-e", "get3d", "atlasnet", "cad agent",
+    "3D-aware", "implicit surface", "volumetric rendering"
 ]
 
 WEBHOOK_2D = os.environ["WEBHOOK_2D"]
