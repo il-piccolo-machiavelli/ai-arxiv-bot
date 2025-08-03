@@ -24,8 +24,16 @@ KEYWORDS_3D = [
     "3D-aware", "implicit surface", "volumetric rendering"
 ]
 
+KEYWORDS_multimodal = [
+    "multimodal", "multimodality", "sensor fusion", "quadruped", "locomotion", "affordance",
+    "navigation", "embodied", "audio-visual", "anomaly detection", "event detection",
+    "activity recognition", "cross-modal", "representation learning", "multisensory integration",
+    "modality alignment", "modality-agnostic", "Perceiver", "latent attention", "structured input output"
+]
+
 WEBHOOK_2D = os.environ["WEBHOOK_2D"]
 WEBHOOK_3D = os.environ["WEBHOOK_3D"]
+WEBHOOK_multimodal = os.environ["WEBHOOK_multimodal"]
 
 # 주말 체크 및 종료
 today = datetime.utcnow()
@@ -57,11 +65,11 @@ def contains_keyword(text, keywords):
     clean_text = text.replace("-", "").replace("\n", "").replace(" ", "")
     return any(kw.replace(" ", "") in clean_text for kw in keywords)
 
-print(f"🧪 Webhook 2D 존재 여부: {'WEBHOOK_2D' in os.environ}")
-print(f"📡 Webhook 2D 길이: {len(os.environ.get('WEBHOOK_2D', ''))}")
+# print(f"🧪 Webhook 2D 존재 여부: {'WEBHOOK_2D' in os.environ}")
+# print(f"📡 Webhook 2D 길이: {len(os.environ.get('WEBHOOK_2D', ''))}")
 
 def filter_and_post():
-    msg_2d, msg_3d = [], []
+    msg_2d, msg_3d, msg_multimodal = [], [], []
 
     print(f"✅ arXiv에서 받은 논문 수: {len(feed.entries)}개")
     
@@ -94,12 +102,17 @@ def filter_and_post():
             if contains_keyword(text, KEYWORDS_3D):
                 print(f"   👉 [3D 매칭됨] {entry.title.strip()}")
                 msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
+
+            if contains_keyword(text, KEYWORDS_multimodal):
+                print(f"   👉 [multimodal 매칭됨] {entry.title.strip()}")
+                msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
         else:
             print(f"   ⏭️ SKIP: 타겟 날짜 범위 밖 (not in {start_date} ~ {end_date})")
 
     print(f"\n📊 필터링 결과:")
     print(f"- 2D 논문: {len(msg_2d)}개")
     print(f"- 3D 논문: {len(msg_3d)}개")
+    print(f"- Multimodal 논문: {len(msg_multimodal)}개")
 
     target_date_str = target_date.strftime('%Y-%m-%d')
     
@@ -112,5 +125,10 @@ def filter_and_post():
         send_to_discord(WEBHOOK_3D, f"**🧱 {target_date_str} 3D 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_3d[:5]))
     else:
         print("❌ 3D 논문이 없어 Discord 전송을 생략합니다.")
+
+    if msg_multimodal:
+        send_to_discord(WEBHOOK_multimodal, f"**🧱 {target_date_str} Multimodal 생성 논문 (arXiv)**\n\n" + "\n\n".join(msg_multimodal[:5]))
+    else:
+        print("❌ Multimodal 논문이 없어 Discord 전송을 생략합니다.")
 
 filter_and_post()
