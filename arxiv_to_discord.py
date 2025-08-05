@@ -109,10 +109,14 @@ def filter_and_post():
         else:
             print(f"   ⏭️ SKIP: 타겟 날짜 범위 밖 (not in {start_date} ~ {end_date})")
 
+    print(f"- Multimodal 내용: {msg_multimodal}")
+    print(f"- Multimodal 길이: {len(msg_multimodal)}")
+    print(f"- Multimodal 타입: {type(msg_multimodal)}")
+    
     print(f"\n📊 필터링 결과:")
     print(f"- 2D 논문: {len(msg_2d)}개")
     print(f"- 3D 논문: {len(msg_3d)}개")
-    print(f"- Multimodal 논문: {len(msg_multimodal)}개")
+    print(f"- Multimodal 논문: {len(msg_multimodal)}개")    
 
     target_date_str = target_date.strftime('%Y-%m-%d')
     
