@@ -105,7 +105,7 @@ def filter_and_post():
 
             if contains_keyword(text, KEYWORDS_multimodal):
                 print(f"   👉 [multimodal 매칭됨] {entry.title.strip()}")
-                msg_3d.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
+                msg_multimodal.append(f"🔸 **{entry.title.strip()}**\n{entry.link}")
         else:
             print(f"   ⏭️ SKIP: 타겟 날짜 범위 밖 (not in {start_date} ~ {end_date})")
 
