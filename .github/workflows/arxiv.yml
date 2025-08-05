@@ -27,5 +27,5 @@ jobs:
         env:
           WEBHOOK_2D: ${{ secrets.WEBHOOK_2D }}
           WEBHOOK_3D: ${{ secrets.WEBHOOK_3D }}
-          WEBHOOK_multimodal: ${{ secrets.WEBHOOK_3D }}
+          WEBHOOK_multimodal: ${{ secrets.WEBHOOK_multimodal }}
         run: python arxiv_to_discord.py
